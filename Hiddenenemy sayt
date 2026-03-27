@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="az">    
+<head>    
+    <meta charset="UTF-8">    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">    
+    <title>Professional Sistem v4.4</title>    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">    
+    <style>    
+        /* Orijinal stillərin */
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background-color: #000; color: white; font-family: 'Poppins', sans-serif; overflow: hidden; }    
+        #loader-container { position: fixed; inset: 0; background: #000; display: flex; justify-content: center; align-items: center; z-index: 10000; transition: opacity 0.8s; }    
+        .ring { position: absolute; border: 2px solid rgba(37, 211, 102, 0.8); border-radius: 50%; animation: ripple 3s infinite; opacity: 0; box-shadow: 0 0 15px rgba(37, 211, 102, 0.4); }    
+        .ring:nth-child(1) { width: 55px; height: 55px; animation-delay: 0s; }    
+        .ring:nth-child(2) { width: 110px; height: 110px; animation-delay: 0.4s; }    
+        @keyframes ripple { 0% { transform: scale(0.5); opacity: 0; } 50% { opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }    
+        .auth-screen { display: none; position: fixed; inset: 0; background: radial-gradient(circle at center, #05140d 0%, #000 100%); z-index: 9000; flex-direction: column; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.4s; }    
+        .auth-box { background: rgba(10, 10, 10, 0.8); padding: 30px; border-radius: 25px; text-align: center; width: 85%; max-width: 350px; border: 1px solid rgba(37, 211, 102, 0.3); backdrop-filter: blur(20px); box-shadow: 0 0 30px rgba(37, 211, 102, 0.1), 0 15px 35px rgba(0,0,0,0.8); animation: fadeInScale 0.5s ease-out; }    
+        @keyframes fadeInScale { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }    
+        .auth-box h2 { letter-spacing: 4px; margin-bottom: 25px; font-size: 22px; color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.2); }    
+        .input-group { position: relative; margin-bottom: 20px; text-align: left; }    
+        .input-group label { display: block; margin-bottom: 6px; color: #aaa; font-size: 12px; font-weight: 500; }    
+        .input-wrapper { position: relative; display: flex; align-items: center; }    
+        .input-wrapper input { width: 100%; padding: 12px 40px 12px 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; color: white; outline: none; box-sizing: border-box; transition: 0.4s; font-size: 14px; }    
+        .input-wrapper i { position: absolute; right: 15px; color: #444; cursor: pointer; transition: 0.3s; }    
+        .input-wrapper i:hover { color: #25D366; text-shadow: 0 0 8px #25D366; }    
+        .input-wrapper input:focus { border-color: #25D366; background: rgba(37, 211, 102, 0.03); box-shadow: 0 0 15px rgba(37, 211, 102, 0.15); }    
+        .auth-btn { width: 100%; padding: 15px; border: none; border-radius: 12px; background: linear-gradient(135deg, #25D366, #128C7E); color: white; font-weight: bold; cursor: pointer; text-transform: uppercase; margin-top: 10px; transition: 0.4s; letter-spacing: 2px; box-shadow: 0 4px 15px rgba(37, 211, 102, 0.2); }    
+        .auth-btn:hover { box-shadow: 0 0 20px rgba(37, 211, 102, 0.4); transform: translateY(-2px); }    
+        .switch-text { color: #666; font-size: 13px; margin-top: 20px; cursor: pointer; transition: 0.3s; }    
+        .switch-text span { color: #25D366; font-weight: bold; text-shadow: 0 0 5px rgba(37, 211, 102, 0.3); }    
+        #main-wrapper { display: none; height: 100%; flex-direction: column; background: #000; }    
+        .page { flex: 1; display: none; padding: 20px; text-align: center; overflow-y: auto; animation: fadeUp 0.5s ease-out; }    
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }    
+        .active-page { display: flex; flex-direction: column; }    
+        .bottom-nav { height: 75px; background: #080d10; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid rgba(255,255,255,0.05); box-shadow: 0 -5px 20px rgba(0,0,0,0.5); }    
+        .nav-item { display: flex; flex-direction: column; align-items: center; color: #5a6b75; cursor: pointer; font-size: 10px; flex: 1; transition: 0.3s; }    
+        .nav-item i { font-size: 19px; margin-bottom: 4px; padding: 8px 18px; border-radius: 20px; transition: 0.4s; }    
+        .nav-item.active { color: #fff; }    
+        .nav-item.active i { background: rgba(37, 211, 102, 0.15); color: #25D366; box-shadow: 0 0 15px rgba(37, 211, 102, 0.1); }    
+        
+        /* CHAT ÜÇÜN ƏLAVƏ STİLLƏR */
+        #chat-container { flex: 1; display: flex; flex-direction: column; overflow: hidden; height: calc(100% - 100px); }
+        #messages-list { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 10px; scroll-behavior: smooth; }
+        .msg { max-width: 80%; padding: 10px 15px; border-radius: 15px; font-size: 14px; position: relative; word-wrap: break-word; }
+        .msg-received { align-self: flex-start; background: #1a1a1a; color: #eee; border-bottom-left-radius: 2px; border: 1px solid #333; }
+        .msg-sent { align-self: flex-end; background: #128C7E; color: white; border-bottom-right-radius: 2px; }
+        .msg-user { font-size: 10px; color: #25D366; margin-bottom: 4px; display: block; font-weight: bold; }
+        .chat-input-area { display: flex; padding: 10px; gap: 10px; background: #0a0a0a; border-radius: 15px; margin-top: 5px; }
+        .chat-input-area input { flex: 1; background: transparent; border: none; color: white; outline: none; font-size: 14px; }
+        .send-btn { color: #25D366; cursor: pointer; font-size: 20px; }
+
+        /* Profil stilləri */
+        .avatar-wrapper { width: 110px; height: 110px; border-radius: 50%; border: 3px solid #25D366; margin: 0 auto 15px; position: relative; overflow: hidden; background: #111; box-shadow: 0 0 20px rgba(37, 211, 102, 0.2); }    
+        .avatar-wrapper img { width: 100%; height: 100%; object-fit: cover; }    
+        .edit-icon { position: absolute; bottom: 5px; right: 5px; background: #25D366; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: black; cursor: pointer; border: 2px solid #000; }    
+        .settings-list { margin-top: 30px; text-align: left; background: #0a0a0a; border-radius: 20px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); }    
+        .settings-item { display: flex; align-items: center; padding: 18px 20px; border-bottom: 1px solid rgba(255,255,255,0.03); cursor: pointer; }    
+        .settings-item i { font-size: 18px; margin-right: 15px; color: #25D366; width: 25px; text-align: center; }    
+        #imageInput { display: none; }    
+    </style>    
+</head>    
+<body>  
+    <div id="loader-container">    
+        <div class="ring"></div><div class="ring"></div>    
+    </div>    
+
+    <div id="login-screen" class="auth-screen">    
+        <div class="auth-box">    
+            <h2>SİSTEMƏ GİRİŞ</h2>    
+            <div class="input-group">    
+                <label>İstifadəçi Adı</label>    
+                <div class="input-wrapper"><input type="text" id="login-user" maxlength="6" placeholder="Maks: 6 hərf"></div>    
+            </div>    
+            <div class="input-group">    
+                <label>Şifrə</label>    
+                <div class="input-wrapper">    
+                    <input type="password" id="login-pass" maxlength="8" placeholder="Maks: 8 hərf">    
+                    <i class="fa-solid fa-eye" onclick="togglePass('login-pass', this)"></i>    
+                </div>    
+            </div>    
+            <button class="auth-btn" onclick="handleLogin()">Giriş et</button>    
+            <p class="switch-text" onclick="showAuth('register')">Hesabınız yoxdur? <span>Qeydiyyat</span></p>    
+            <p id="login-err" style="color: #ff4d4d; font-size: 12px; margin-top: 10px;"></p>    
+        </div>    
+    </div>    
+
+    <div id="register-screen" class="auth-screen">    
+        <div class="auth-box">    
+            <h2>QEYDİYYAT</h2>    
+            <div class="input-group">    
+                <label>Ad</label>    
+                <div class="input-wrapper"><input type="text" id="reg-user" maxlength="6" placeholder="Maks: 6 hərf"></div>    
+            </div>    
+            <div class="input-group">    
+                <label>Şifrə</label>    
+                <div class="input-wrapper">    
+                    <input type="password" id="reg-pass" maxlength="8" placeholder="Maks: 8 hərf">    
+                    <i class="fa-solid fa-eye" onclick="togglePass('reg-pass', this)"></i>    
+                </div>    
+            </div>    
+            <div class="input-group">    
+                <label>Şifrənin təsdiqi</label>    
+                <div class="input-wrapper"><input type="password" id="reg-pass-confirm" maxlength="8" placeholder="Təkrarla"></div>    
+            </div>    
+            <button class="auth-btn" onclick="handleRegister()">Hesab Yarat</button>    
+            <p class="switch-text" onclick="showAuth('login')">Hesabınız var? <span>Giriş</span></p>    
+            <p id="reg-err" style="color: #ff4d4d; font-size: 12px; margin-top: 10px;"></p>    
+        </div>    
+    </div>    
+
+    <div id="main-wrapper">    
+        <div id="page-ev" class="page active-page">    
+            <h1 style="margin-top: 40px; letter-spacing: 2px;">EV SƏHİFƏSİ</h1>    
+            <div style="width: 50px; height: 3px; background: #25D366; margin: 10px auto; border-radius: 2px; box-shadow: 0 0 10px #25D366;"></div>    
+            <p style="color: #888; font-size: 14px;">Sistem aktivdir və tam təhlükəsizdir.</p>    
+        </div>    
+
+        <div id="page-dostluq" class="page">    
+            <h1>Dostluq</h1>    
+            <div style="margin-top: 70px; color: #444;">    
+                <i class="fa-solid fa-user-group" style="font-size: 50px; margin-bottom: 20px; color: #222;"></i>    
+                <p>Hələ ki heç bir dostunuz yoxdur.</p>    
+            </div>    
+        </div>    
+
+        <div id="page-chat" class="page">
+            <h1>Qlobal Chat</h1>
+            <div id="chat-container">
+                <div id="messages-list"></div>
+                <div class="chat-input-area">
+                    <input type="text" id="chat-msg-input" placeholder="Mesaj yazın...">
+                    <i class="fa-solid fa-paper-plane send-btn" id="send-msg-btn"></i>
+                </div>
+            </div>
+        </div>    
+
+        <div id="page-notif" class="page"><h1>Bildiriş</h1><p style="color: #666;">Hələ ki yeni bildiriş yoxdur.</p></div>    
+
+        <div id="page-profile" class="page">    
+            <div class="profile-container">    
+                <div class="avatar-wrapper">    
+                    <img id="profileImg" src="" style="display:none;">    
+                    <i id="defIcon" class="fa-solid fa-user" style="font-size: 50px; line-height: 110px; color: #333;"></i>    
+                    <label for="imageInput" class="edit-icon"><i class="fa-solid fa-pencil"></i></label>    
+                </div>    
+                <input type="file" id="imageInput" accept="image/*">    
+                <h3 id="user-display" style="margin-bottom: 5px; letter-spacing: 1px;">İstifadəçi</h3>    
+                <p style="color: #25D366; font-size: 12px; margin-top: 0; font-weight: bold;">Online</p>    
+                <div class="settings-list">    
+                    <div class="settings-item" onclick="logout()">    
+                        <i class="fa-solid fa-right-from-bracket" style="color: #ff9f43;"></i>    
+                        <div class="text">Hesabdan çıxış</div>    
+                    </div>    
+                    <div class="settings-item" onclick="deleteAccount()">    
+                        <i class="fa-solid fa-user-slash" style="color: #ff4d4d;"></i>    
+                        <div class="text">Hesabı tamamilə sil</div>    
+                    </div>    
+                </div>    
+            </div>    
+        </div>    
+
+        <div class="bottom-nav">    
+            <div class="nav-item active" onclick="showPage('ev', this)"><i class="fa-solid fa-house"></i><span>Ev</span></div>    
+            <div class="nav-item" onclick="showPage('dostluq', this)"><i class="fa-solid fa-user-group"></i><span>Dostluq</span></div>    
+            <div class="nav-item" onclick="showPage('chat', this)"><i class="fa-solid fa-comment-dots"></i><span>Chat</span></div>    
+            <div class="nav-item" onclick="showPage('notif', this)"><i class="fa-solid fa-bell"></i><span>Bildiriş</span></div>    
+            <div class="nav-item" onclick="showPage('profile', this)"><i class="fa-solid fa-user"></i><span>Profil</span></div>    
+        </div>    
+    </div>  
+
+<script type="module">    
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";    
+import { getFirestore, doc, setDoc, getDoc, deleteDoc, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";    
+    
+const firebaseConfig = {    
+  apiKey: "AIzaSyCBZspjgXfsN4pBRhZ1AR670e7vVctPy88",    
+  authDomain: "hidden-enemy.firebaseapp.com",    
+  projectId: "hidden-enemy",    
+  storageBucket: "hidden-enemy.firebasestorage.app",    
+  messagingSenderId: "527563481567",    
+  appId: "1:527563481567:web:dbf807cfa102d2b770a46a"    
+};    
+    
+const app = initializeApp(firebaseConfig);    
+const db = getFirestore(app);    
+    
+let currentUser = null;    
+    
+// FIREBASE FUNKSİYALAR    
+const getUser = async (username) => {    
+    const snap = await getDoc(doc(db, "users", username));    
+    return snap.exists() ? snap.data() : null;    
+};    
+    
+const saveUser = async (username, data) => {    
+    await setDoc(doc(db, "users", username), data);    
+};    
+    
+const deleteUser = async (username) => {    
+    await deleteDoc(doc(db, "users", username));    
+};    
+
+// --- CHAT LOGİKASI ---
+const sendMessage = async () => {
+    const input = document.getElementById('chat-msg-input');
+    const msg = input.value.trim();
+    if (!msg || !currentUser) return;
+
+    input.value = "";
+    await addDoc(collection(db, "messages"), {
+        sender: currentUser,
+        text: msg,
+        time: serverTimestamp()
+    });
+};
+
+document.getElementById('send-msg-btn').addEventListener('click', sendMessage);
+document.getElementById('chat-msg-input').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') sendMessage();
+});
+
+// Mesajları Real-time dinləmək
+const loadMessages = () => {
+    const q = query(collection(db, "messages"), orderBy("time", "asc"));
+    onSnapshot(q, (snapshot) => {
+        const list = document.getElementById('messages-list');
+        list.innerHTML = "";
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            const isMe = data.sender === currentUser;
+            const div = document.createElement('div');
+            div.className = `msg ${isMe ? 'msg-sent' : 'msg-received'}`;
+            div.innerHTML = `<span class="msg-user">${data.sender}</span>${data.text}`;
+            list.appendChild(div);
+        });
+        list.scrollTop = list.scrollHeight;
+    });
+};
+// --- CHAT LOGİKASI SONU ---
+    
+window.onload = () => {    
+    setTimeout(() => {    
+        document.getElementById('loader-container').style.display = 'none';    
+        showAuth('login');    
+    }, 2000);    
+};    
+    
+window.togglePass = function(id, icon) {    
+    const input = document.getElementById(id);    
+    if (input.type === "password") {    
+        input.type = "text";    
+        icon.classList.replace('fa-eye', 'fa-eye-slash');    
+    } else {    
+        input.type = "password";    
+        icon.classList.replace('fa-eye-slash', 'fa-eye');    
+    }    
+}    
+    
+window.showAuth = function(type) {    
+    document.querySelectorAll('.auth-screen').forEach(s => {    
+        s.style.display = 'none';    
+        s.style.opacity = '0';    
+    });    
+    const screen = document.getElementById(type + '-screen');    
+    if(screen){
+        screen.style.display = 'flex';    
+        setTimeout(() => screen.style.opacity = '1', 50);    
+    }
+}    
+    
+window.handleRegister = async function() {    
+    const user = document.getElementById('reg-user').value.trim();    
+    const pass = document.getElementById('reg-pass').value;    
+    const confirm = document.getElementById('reg-pass-confirm').value;    
+    const err = document.getElementById('reg-err');    
+    
+    if (!user || !pass) return err.textContent = "Məlumatları daxil et!";    
+    if (pass !== confirm) return err.textContent = "Şifrələr eyni deyil!";    
+    const existing = await getUser(user);    
+    if (existing) { err.textContent = "Bu ad artıq var!"; return; }    
+    await saveUser(user, { password: pass, pfp: "" });    
+    alert("Qeydiyyat OK");    
+    showAuth('login');    
+}    
+    
+window.handleLogin = async function() {    
+    const user = document.getElementById('login-user').value.trim();    
+    const pass = document.getElementById('login-pass').value;    
+    const err = document.getElementById('login-err');    
+    const data = await getUser(user);    
+    if (data && data.password === pass) {    
+        currentUser = user;    
+        loginToApp(data);    
+        loadMessages(); // Login olanda chatı yüklə
+    } else {    
+        err.textContent = "Yanlış məlumat!";    
+    }    
+}    
+    
+function loginToApp(data) {    
+    document.getElementById('login-screen').style.display = 'none';    
+    document.getElementById('main-wrapper').style.display = 'flex';    
+    document.getElementById('user-display').textContent = currentUser;    
+    if (data.pfp) {    
+        document.getElementById('profileImg').src = data.pfp;    
+        document.getElementById('profileImg').style.display = 'block';    
+        document.getElementById('defIcon').style.display = 'none';    
+    }    
+}    
+    
+window.deleteAccount = async function() {    
+    if (!currentUser) return;    
+    if (confirm("Silinsin?")) {    
+        await deleteUser(currentUser);    
+        alert("Silindi");    
+        exitToLogin();    
+    }    
+}    
+    
+window.logout = function() { exitToLogin(); }    
+    
+function exitToLogin() {    
+    currentUser = null;    
+    document.getElementById('main-wrapper').style.display = 'none';    
+    showAuth('login');    
+}    
+    
+document.getElementById('imageInput').addEventListener('change', async function(e) {    
+    const file = e.target.files[0];    
+    if (!file || !currentUser) return;    
+    const reader = new FileReader();    
+    reader.onload = async function(event) {    
+        const base64 = event.target.result;    
+        const old = await getUser(currentUser);    
+        await saveUser(currentUser, { password: old.password, pfp: base64 });    
+        document.getElementById('profileImg').src = base64;    
+        document.getElementById('profileImg').style.display = 'block';    
+        document.getElementById('defIcon').style.display = 'none';    
+    };    
+    reader.readAsDataURL(file);    
+});    
+    
+window.showPage = function(pageId, element) {    
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active-page'));    
+    document.getElementById('page-' + pageId).classList.add('active-page');    
+    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));    
+    element.classList.add('active');    
+    if(pageId === 'chat') {
+        const list = document.getElementById('messages-list');
+        list.scrollTop = list.scrollHeight;
+    }
+}    
+</script>  
+</body>
+</html>
